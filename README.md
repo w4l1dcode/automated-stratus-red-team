@@ -32,3 +32,6 @@ INFO[0000] Executing ttp: aws.impact.s3-ransomware-batch-deletion
 ```shell
 % make build
 ```
+
+## Reference
+[Stratus Red Team](https://github.com/DataDog/stratus-red-team) by DataDog
