@@ -1,5 +1,5 @@
 # automated-stratus-red-team
-Stratus Red Team is "Atomic Red Team™" for the cloud. This GO program runs automated red team tests on AWS. The code will create the infrastructure needed for the tests, once finished, the infrastructure will also get cleaned up.
+Stratus Red Team is "Atomic Red Team™" for the cloud. This Go program automates red team tests on AWS by creating the necessary infrastructure, executing the tests, and then cleaning up the infrastructure afterward. For each run, the program randomly selects a tactic and executes all associated (available) red team tests, with a 20-minute delay between each attack.
 
 ## Prerequisites
 A sandbox environment to run the red team tests on. You will need admin permissions on that environment.
