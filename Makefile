@@ -1,16 +1,18 @@
 all: run
 
 run:
-	go run ./cmd/... -config=dev.yml
+	# Run program
+	go run ./cmd/... -config=config.yml
 
 build:
-	go build -o automated-stratus-red-team ./cmd/...
+	aws eks update-kubeconfig --region $(K8S_REGION) --name $(CLUSTER_NAME)
+	go build -o stratus-red-team ./cmd/...
 
 test:
 	go test -v ./...
 
 clean:
-	rm -r dist/ automated-stratus-red-team || true
+	rm -r dist/ stratus-red-team || true
 
 update:
 	go get -u ./...

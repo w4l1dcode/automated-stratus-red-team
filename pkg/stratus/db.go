@@ -3,14 +3,14 @@ package stratus
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
-	"log"
+	"github.com/sirupsen/logrus"
 )
 
-func InitDB(filepath string) *sql.DB {
-	log.Println("TEST INIT DB")
+// InitDB initializes the SQLite database and creates the table if it does not exist.
+func InitDB(filepath string) (*sql.DB, error) {
 	db, err := sql.Open("sqlite3", filepath)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	createTableSQL := `CREATE TABLE IF NOT EXISTS used_tactics (
@@ -20,38 +20,50 @@ func InitDB(filepath string) *sql.DB {
 
 	_, err = db.Exec(createTableSQL)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return db
+	return db, nil
 }
 
-func MarkTacticAsUsed(db *sql.DB, tactic string) {
+// MarkTacticAsUsed inserts a tactic into the database.
+func MarkTacticAsUsed(db *sql.DB, tactic string) error {
 	insertSQL := `INSERT INTO used_tactics (tactic) VALUES (?)`
 	statement, err := db.Prepare(insertSQL)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	defer func(statement *sql.Stmt) {
+		err := statement.Close()
+		if err != nil {
+			logrus.Fatalf("Error closing database: %v\n", err)
+		}
+	}(statement) // Ensure the statement is closed after use
+
 	_, err = statement.Exec(tactic)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	return nil
 }
 
-func IsTacticUsed(db *sql.DB, tactic string) bool {
+// IsTacticUsed checks if a tactic has already been used.
+func IsTacticUsed(db *sql.DB, tactic string) (bool, error) {
 	querySQL := `SELECT COUNT(*) FROM used_tactics WHERE tactic = ?`
 	var count int
 	err := db.QueryRow(querySQL, tactic).Scan(&count)
 	if err != nil {
-		log.Fatal(err)
+		return false, err
 	}
-	return count > 0
+	return count > 0, nil
 }
 
-func ResetTactics(db *sql.DB) {
+// ResetTactics deletes all records from the used_tactics table.
+func ResetTactics(db *sql.DB) error {
 	resetSQL := `DELETE FROM used_tactics`
 	_, err := db.Exec(resetSQL)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	return nil
 }

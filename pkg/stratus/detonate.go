@@ -2,17 +2,15 @@ package stratus
 
 import (
 	"database/sql"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/datadog/stratus-red-team/v2/pkg/stratus"
 	_ "github.com/datadog/stratus-red-team/v2/pkg/stratus/mitreattack"
 	stratusrunner "github.com/datadog/stratus-red-team/v2/pkg/stratus/runner"
 	"github.com/sirupsen/logrus"
-	"time"
 )
 
-func DetonateTTPs(db *sql.DB, platform string) error {
+func DetonateTTPs(db *sql.DB, platform string, awsClient *ecr.Client, l *logrus.Logger) error {
 	tactic := GetUnusedTactic(db)
-
-	logrus.Infof("Executing tests of tactic: %s\n", tactic)
 
 	filter := &stratus.AttackTechniqueFilter{
 		Platform: stratus.Platform(platform),
@@ -21,10 +19,10 @@ func DetonateTTPs(db *sql.DB, platform string) error {
 
 	ttps := stratus.GetRegistry().GetAttackTechniques(filter)
 
-	logrus.Infof("Number of ttps found: %d\n", len(ttps))
+	logrus.Infof("Number of ttps found for %s for tactic \"%s\": %d \n", platform, TacticToString(tactic), len(ttps))
 
 	if len(ttps) == 0 {
-		logrus.Fatalf("No ttps found for tactic: %s\n", TacticToString(tactic))
+		logrus.Warningf("No TTPs found for tactic: %s\n", TacticToString(tactic))
 		return nil
 	}
 
@@ -43,23 +41,28 @@ func DetonateTTPs(db *sql.DB, platform string) error {
 		defer func(stratusRunner stratusrunner.Runner) {
 			err := stratusRunner.CleanUp()
 			if err != nil {
-				logrus.Infof("Could not cleanup created infrastructure: %v\n", err)
+				logrus.Warningf("Could not cleanup created infrastructure: %v\n", err)
 			}
 		}(stratusRunner)
 
-		logrus.Info("TTP is warm! Executing...\n")
+		logrus.Infof("TTP %s is warm! Executing...\n", ttp.ID)
 
 		err = stratusRunner.Detonate()
+
 		if err != nil {
-			logrus.Fatalf("Could not detonate TTP: %s\n", err)
+			logrus.Warningf("Could not detonate TTP: %v\n", err)
+			logrus.Warning("Continuing...")
+		} else {
+			logrus.Infof("TTP %s detonated\n", ttp.ID)
 		}
 
-		logrus.Info("TTP detonated!\n")
-
 		// Add a 20-minute delay between attacks to wait if a detection will be triggered
-		time.Sleep(20 * time.Minute)
+		//time.Sleep(20 * time.Minute)
 	}
 
-	MarkTacticAsUsed(db, TacticToString(tactic))
+	err := MarkTacticAsUsed(db, TacticToString(tactic))
+	if err != nil {
+		logrus.Fatalf("Failed marking tactic as used: %s\n", err)
+	}
 	return nil
 }

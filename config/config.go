@@ -20,8 +20,17 @@ type Config struct {
 	AWS struct {
 		AwsAccessKeyId     string `yaml:"access_key_id" env:"AWS_ACCESS_KEY_ID" valid:"required"`
 		AwsSecretAccessKey string `yaml:"secret_access_key" env:"AWS_SECRET_ACCESS_KEY" valid:"required"`
-		SessionToken       string `yaml:"session_token" env:"SESSION_TOKEN" valid:"required"`
+		Region             string `yaml:"aws_region" env:"AWS_REGION" valid:"required"`
 	} `yaml:"aws"`
+
+	Kubernetes struct {
+		ClusterName string `yaml:"cluster_name" env:"CLUSTER_NAME" valid:"required"`
+		Region      string `yaml:"k8s_region" env:"K8S_REGION" valid:"required"`
+	} `yaml:"kubernetes"`
+
+	//Slack struct {
+	//	URL string `yaml:"url" env:"SLACK_URL" valid:"required"`
+	//} `yaml:"slack"`
 }
 
 func (c *Config) Validate() error {

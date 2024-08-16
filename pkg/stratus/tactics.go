@@ -50,14 +50,21 @@ func GetUnusedTactic(db *sql.DB) mitreattack.Tactic {
 
 	var unusedTactics []mitreattack.Tactic
 	for _, tactic := range tactics {
-		if !IsTacticUsed(db, TacticToString(tactic)) {
+		used, err := IsTacticUsed(db, TacticToString(tactic))
+		if err != nil {
+			logrus.Fatalf("Error checking if tactic is used: %v", err)
+			continue
+		}
+		if !used {
 			unusedTactics = append(unusedTactics, tactic)
 		}
 	}
 
 	if len(unusedTactics) == 0 {
-		logrus.Info("All TTPs have been executed. Resetting database...")
-		ResetTactics(db)
+		err := ResetTactics(db)
+		if err != nil {
+			logrus.Fatalf("Error resetting tactics: %v\n", err)
+		}
 		return GetUnusedTactic(db)
 	}
 
