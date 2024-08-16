@@ -1,6 +1,5 @@
 # cloud-threat-emulation
-This Go program runs automated red team tests on AWS and Kubernetes using stratus red team. This is done by creating the necessary infrastructure, executing the tests, and then cleaning up the infrastructure afterward. For each run, the program randomly selects a tactic and executes all associated (available) red team tests for that tactic, with a 20-minute delay between each attack.
-
+This Go program automates red team testing on AWS and Kubernetes using Stratus Red Team. It sets up the required infrastructure, executes the red team tests, and cleans up afterward. Each run randomly chooses a tactic and performs all associated red team tests for that tactic, with a 20-minute delay between each attack.
 ## Prerequisites
 - A sandbox account
 - A kubernetes cluster
